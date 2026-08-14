@@ -154,54 +154,23 @@ function solveInitialVelocities(dx, dy, dz, ticks) {
     return { vx0, vy0, vz0 };
 }
 
-// Minimal 2-corner basis solver (eliminates opposing forces)
+// Zero-cancellation optimal solver: guarantees no opposing corner pairs fire simultaneously
 function solveChargeDistribution(vx0, vy0, vz0) {
     const norm = Math.sqrt(chamberDx**2 + chamberDy**2 + chamberDz**2);
     const ux = chamberDx / norm;
     const uy = chamberDy / norm;
     const uz = chamberDz / norm;
 
-    const tx = ux !== 0 ? vx0 / (K_FORCE * ux) : 0;
-    const tz = uz !== 0 ? vz0 / (K_FORCE * uz) : 0;
+    const Fx = ux !== 0 ? vx0 / (K_FORCE * ux) : 0;
+    const Fz = uz !== 0 ? vz0 / (K_FORCE * uz) : 0;
 
-    let pNW = 0, pNE = 0, pSW = 0, pSE = 0;
+    const A = (Fx + Fz) / 2.0;
+    const B = (Fx - Fz) / 2.0;
 
-    if (tx >= 0 && tz >= 0) {
-        if (tx >= tz) {
-            pNW = 0.5 * (tx + tz);
-            pSW = 0.5 * (tx - tz);
-        } else {
-            pNW = 0.5 * (tx + tz);
-            pNE = 0.5 * (tz - tx);
-        }
-    } else if (tx < 0 && tz >= 0) {
-        const atx = Math.abs(tx);
-        if (atx >= tz) {
-            pNE = 0.5 * (atx + tz);
-            pSE = 0.5 * (atx - tz);
-        } else {
-            pNE = 0.5 * (atx + tz);
-            pNW = 0.5 * (tz - atx);
-        }
-    } else if (tx >= 0 && tz < 0) {
-        const atz = Math.abs(tz);
-        if (tx >= atz) {
-            pSW = 0.5 * (tx + atz);
-            pNW = 0.5 * (tx - atz);
-        } else {
-            pSW = 0.5 * (tx + atz);
-            pSE = 0.5 * (atz - tx);
-        }
-    } else {
-        const atx = Math.abs(tx), atz = Math.abs(tz);
-        if (atx >= atz) {
-            pSE = 0.5 * (atx + atz);
-            pNE = 0.5 * (atx - atz);
-        } else {
-            pSE = 0.5 * (atx + atz);
-            pSW = 0.5 * (atz - atx);
-        }
-    }
+    const pNW = Math.max(0.0, A);
+    const pSE = Math.max(0.0, -A);
+    const pSW = Math.max(0.0, B);
+    const pNE = Math.max(0.0, -B);
 
     const vyCorners = K_FORCE * uy * (pNW + pNE + pSW + pSE);
     const pUp = Math.max(0, (vy0 - vyCorners) / K_FORCE);
