@@ -154,7 +154,7 @@ function solveInitialVelocities(dx, dy, dz, ticks) {
     return { vx0, vy0, vz0 };
 }
 
-function solveBbDistribution(vx0, vy0, vz0) {
+function solveChargeDistribution(vx0, vy0, vz0) {
     const norm = Math.sqrt(chamberDx**2 + chamberDy**2 + chamberDz**2);
     const ux = chamberDx / norm;
     const uy = chamberDy / norm;
@@ -203,7 +203,7 @@ function calculate() {
         const vel = solveInitialVelocities(dx, dy, dz, ticks);
         vx0 = vel.vx0; vy0 = vel.vy0; vz0 = vel.vz0;
 
-        const dist = solveBbDistribution(vx0, vy0, vz0);
+        const dist = solveChargeDistribution(vx0, vy0, vz0);
         pNW = Math.round(dist.pNW);
         pNE = Math.round(dist.pNE);
         pSW = Math.round(dist.pSW);
