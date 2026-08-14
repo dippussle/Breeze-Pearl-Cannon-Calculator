@@ -1,11 +1,11 @@
-# Breeze Pearl Cannon Calculator
+# Wind Charge Pearl Cannon Calculator
 
-A simple tool to calculate Ender Pearl trajectory and Breeze Ball (BB) explosion requirements for 360-degree pearl cannons in Minecraft.
+A simple tool to calculate Ender Pearl trajectory and Wind Charge explosion requirements for 360-degree pearl cannons in Minecraft.
 
 ## Features
 
-- **Target Solver**: Enter your current coordinates and target coordinates to calculate required velocities ($V_x, V_y, V_z$) and Breeze Ball counts for each corner (NW, NE, SW, SE).
-- **Manual Simulator**: Adjust BB charges manually to preview trajectory and landing coordinates.
+- **Target Solver**: Enter your current coordinates and target coordinates to calculate required velocities ($V_x, V_y, V_z$) and Wind Charge counts for each corner (NW, NE, SW, SE).
+- **Manual Simulator**: Adjust Wind Charges manually to preview trajectory and landing coordinates.
 - **Top-Down Radar**: Visual trajectory map showing flight path from launch to landing.
 - **Tick Inspector**: View exact coordinates, speed, and velocities tick by tick.
 
