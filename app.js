@@ -23,7 +23,6 @@ const targetXInput = document.getElementById('target-x');
 const targetYInput = document.getElementById('target-y');
 const targetZInput = document.getElementById('target-z');
 
-const upInput = document.getElementById('input-up');
 const btnCalc = document.getElementById('btn-calc');
 
 const simNW = document.getElementById('sim-nw');
@@ -86,8 +85,6 @@ btnCalc.addEventListener('click', calculate);
         calculate();
     });
 });
-
-upInput.addEventListener('input', calculate);
 
 function simulateTrajectory(x0, y0, z0, vx0, vy0, vz0, ticks) {
     let x = x0, y = y0, z = z0;
@@ -161,10 +158,7 @@ function solveChargeDistribution(vx0, vy0, vz0) {
     const pSW = Math.max(0.0, B);
     const pNE = Math.max(0.0, -B);
 
-    const vyCorners = K_FORCE * uy * (pNW + pNE + pSW + pSE);
-    const pUp = Math.max(0, (vy0 - vyCorners) / K_FORCE);
-
-    return { pNW, pNE, pSW, pSE, pUp };
+    return { pNW, pNE, pSW, pSE };
 }
 
 // Automatically calculate optimal flight ticks based on target distance
@@ -175,7 +169,7 @@ function findOptimalTicks(dx, dy, dz) {
     for (let t = 15; t <= 350; t++) {
         const vel = solveInitialVelocities(dx, dy, dz, t);
         const dist = solveChargeDistribution(vel.vx0, vel.vy0, vel.vz0);
-        const total = dist.pNW + dist.pNE + dist.pSW + dist.pSE + dist.pUp;
+        const total = dist.pNW + dist.pNE + dist.pSW + dist.pSE;
 
         if (total < minCharges && vel.vy0 > -1.0) {
             minCharges = total;
@@ -191,7 +185,7 @@ function calculate() {
     const y0 = parseFloat(startYInput.value) || 64;
     const z0 = parseFloat(startZInput.value) || 0;
 
-    let pNW = 0, pNE = 0, pSW = 0, pSE = 0, pUp = 0;
+    let pNW = 0, pNE = 0, pSW = 0, pSE = 0;
     let vx0 = 0, vy0 = 0, vz0 = 0;
     let ticks = 100;
 
@@ -214,22 +208,18 @@ function calculate() {
         pNE = Math.round(dist.pNE);
         pSW = Math.round(dist.pSW);
         pSE = Math.round(dist.pSE);
-        pUp = Math.round(dist.pUp);
-
-        upInput.value = pUp;
     } else {
         pNW = parseInt(simNW.value) || 0;
         pNE = parseInt(simNE.value) || 0;
         pSW = parseInt(simSW.value) || 0;
         pSE = parseInt(simSE.value) || 0;
-        pUp = parseInt(upInput.value) || 0;
 
         const norm = Math.sqrt(chamberDx**2 + chamberDy**2 + chamberDz**2);
         const ux = chamberDx / norm, uy = chamberDy / norm, uz = chamberDz / norm;
 
         vx0 = K_FORCE * ux * ((pNW + pSW) - (pNE + pSE));
         vz0 = K_FORCE * uz * ((pNW + pNE) - (pSW + pSE));
-        vy0 = K_FORCE * uy * (pNW + pNE + pSW + pSE) + (pUp * K_FORCE);
+        vy0 = K_FORCE * uy * (pNW + pNE + pSW + pSE);
         ticks = 100;
     }
 
