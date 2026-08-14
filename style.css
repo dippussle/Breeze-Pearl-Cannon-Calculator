@@ -199,27 +199,27 @@ input[type="number"], input[type="range"] {
     gap: 10px;
 }
 
-.bb-grid {
+.charge-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     text-align: center;
 }
 
-.bb-box {
+.charge-box {
     background: #222;
     padding: 8px;
     border-radius: 4px;
     border: 1px solid #333;
 }
 
-.bb-box span {
+.charge-box span {
     display: block;
     font-size: 0.75rem;
     color: #888;
 }
 
-.bb-box strong {
+.charge-box strong {
     font-size: 1.1rem;
     color: #4fc1ff;
     font-family: monospace;
