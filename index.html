@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breeze Ball Pearl Cannon Calculator | Ender Pearl Vektör & Yörünge Hesaplayıcı</title>
+    <meta name="description" content="Minecraft Breeze Ball (BB) Ender Pearl Cannon 360-degree vector calculator and trajectory simulator based on custom drag and gravity physics.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="pearl-icon-badge">
+                    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="9" fill="url(#pearlGlow)" stroke="#00f2fe"/>
+                        <circle cx="12" cy="12" r="4" fill="#00d2ff"/>
+                        <defs>
+                            <radialGradient id="pearlGlow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#00f2fe"/>
+                                <stop offset="100%" stop-color="#09203f"/>
+                            </radialGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1>Breeze Pearl Cannon Calculator</h1>
+                    <p class="subtitle">Ender Pearl Vektör & Hızlandırma Hesaplayıcısı (BB Layout Mechanics)</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button id="langToggleBtn" class="btn btn-secondary">
+                    <span class="icon">🌐</span> <span id="langText">EN / TR</span>
+                </button>
+                <button id="settingsModalBtn" class="btn btn-secondary">
+                    <span class="icon">⚙️</span> <span data-i18n="settings">Fizik Ayarları</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Column: Physics & Chamber Layout Diagram (Matching User's Photo) -->
+            <section class="panel-card chamber-panel">
+                <div class="panel-header">
+                    <h2><span class="badge-num">1</span> <span data-i18n="chamberTitle">Hazne Şeması & Fizik Parametreleri</span></h2>
+                    <span class="status-pill green" id="physicsStatusPill">Fizik: Drag 0.99 | Gravity 0.03</span>
+                </div>
+
+                <!-- User Note Formula Card -->
+                <div class="formula-banner">
+                    <div class="formula-item">
+                        <span class="f-label" data-i18n="dragLabel">Hava Direnci (Drag)</span>
+                        <span class="f-val" id="dispDrag">0.99</span>
+                    </div>
+                    <div class="formula-item">
+                        <span class="f-label" data-i18n="gravityLabel">Yerçekimi (Gravity)</span>
+                        <span class="f-val" id="dispGravity">0.03 / tick</span>
+                    </div>
+                    <div class="formula-item">
+                        <span class="f-label" data-i18n="tickFormula">Formül</span>
+                        <span class="f-code">v_y = (v_y × 0.99) - 0.03</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Chamber Layout Diagram (Matching Paper Drawing) -->
+                <div class="diagram-container">
+                    <div class="diagram-title" data-i18n="diagramTitle">Breeze Ball (BB) Dört Köşe Şeması</div>
+                    
+                    <div class="chamber-box" id="chamberDiagram">
+                        <!-- Top-Left Corner -->
+                        <div class="bb-corner nw" id="cornerNW">
+                            <span class="bb-tag">BB (NW)</span>
+                            <span class="bb-power-badge" id="badgeNW">0</span>
+                        </div>
+                        
+                        <!-- Top-Right Corner -->
+                        <div class="bb-corner ne" id="cornerNE">
+                            <span class="bb-tag">BB (NE)</span>
+                            <span class="bb-power-badge" id="badgeNE">0</span>
+                        </div>
+
+                        <!-- Center Pearl -->
+                        <div class="pearl-center" id="pearlCenter">
+                            <div class="pearl-orb"></div>
+                            <span class="pearl-label">Pearl</span>
+                        </div>
+
+                        <!-- Bottom-Left Corner -->
+                        <div class="bb-corner sw" id="cornerSW">
+                            <span class="bb-tag">BB (SW)</span>
+                            <span class="bb-power-badge" id="badgeSW">0</span>
+                        </div>
+
+                        <!-- Bottom-Right Corner -->
+                        <div class="bb-corner se" id="cornerSE">
+                            <span class="bb-tag">BB (SE)</span>
+                            <span class="bb-power-badge" id="badgeSE">0</span>
+                        </div>
+
+                        <!-- Vector Arrows Canvas -->
+                        <canvas id="vectorCanvas" width="340" height="260"></canvas>
+                    </div>
+
+                    <div class="chamber-legend">
+                        <span class="legend-item"><span class="dot bb-dot"></span> BB: Breeze Ball (Her yöne eşit etki veren patlayıcı)</span>
+                        <span class="legend-item"><span class="dot pearl-dot"></span> Pearl: Ender Pearl (Patlama ile hedefe iletilir)</span>
+                    </div>
+                </div>
+
+                <!-- Vertical Booster Control -->
+                <div class="vertical-booster-card">
+                    <label for="bbUpInput">
+                        <span>🚀 Dikey Yükseltici BB (Up Station)</span>
+                        <span class="tooltip-icon" title="Ender Pearl'e sadece yukarı yönde (Y+) itme kuvveti verir">ℹ️</span>
+                    </label>
+                    <div class="input-with-unit">
+                        <input type="number" id="bbUpInput" value="0" min="0" max="5000" step="1">
+                        <span class="unit">Adet BB</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Mode Tabs & Calculator Controls -->
+            <section class="panel-card main-calc-panel">
+                <!-- Mode Switcher Tabs -->
+                <div class="calc-tabs">
+                    <button class="tab-btn active" id="tabInverse" data-tab="inverse">
+                        <span class="tab-icon">🎯</span>
+                        <div class="tab-text">
+                            <span class="tab-title" data-i18n="tabTargetTitle">Hedef Konum Hesaplayıcı</span>
+                            <span class="tab-sub" data-i18n="tabTargetSub">Koordinat Gir → BB Sayılarını Bul</span>
+                        </div>
+                    </button>
+                    <button class="tab-btn" id="tabForward" data-tab="forward">
+                        <span class="tab-icon">🧪</span>
+                        <div class="tab-text">
+                            <span class="tab-title" data-i18n="tabForwardTitle">İleri Simülatör</span>
+                            <span class="tab-sub" data-i18n="tabForwardSub">BB Sayısı Gir → Düşüş Yerini Bul</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- TAB 1: Inverse Target Solver -->
+                <div class="tab-content active" id="contentInverse">
+                    <div class="coord-grid">
+                        <div class="coord-group">
+                            <h3 data-i18n="startCoordsTitle">📍 Başlangıç Konumu (Pearl Stasis)</h3>
+                            <div class="inputs-row">
+                                <div class="field">
+                                    <label for="startX">X0</label>
+                                    <input type="number" id="startX" value="0" step="0.1">
+                                </div>
+                                <div class="field">
+                                    <label for="startY">Y0</label>
+                                    <input type="number" id="startY" value="64" step="0.1">
+                                </div>
+                                <div class="field">
+                                    <label for="startZ">Z0</label>
+                                    <input type="number" id="startZ" value="0" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="coord-group highlight">
+                            <h3 data-i18n="targetCoordsTitle">🏁 Hedef Konum (Target Coordinates)</h3>
+                            <div class="inputs-row">
+                                <div class="field">
+                                    <label for="targetX">X Target</label>
+                                    <input type="number" id="targetX" value="1500" step="1">
+                                </div>
+                                <div class="field">
+                                    <label for="targetY">Y Target</label>
+                                    <input type="number" id="targetY" value="64" step="1">
+                                </div>
+                                <div class="field">
+                                    <label for="targetZ">Z Target</label>
+                                    <input type="number" id="targetZ" value="800" step="1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Flight Duration Slider -->
+                    <div class="duration-card">
+                        <div class="duration-header">
+                            <label for="ticksInput" data-i18n="ticksLabel">⏱️ Uçuş Süresi (Ticks):</label>
+                            <div class="tick-display">
+                                <span id="ticksValDisplay">100</span> tick (<span id="timeSecDisplay">5.00</span> saniye)
+                            </div>
+                        </div>
+                        <input type="range" id="ticksInput" min="5" max="600" value="100" step="1">
+                        <div class="tick-presets">
+                            <button class="btn-chip" data-ticks="40">40 T (2s)</button>
+                            <button class="btn-chip" data-ticks="100">100 T (5s)</button>
+                            <button class="btn-chip" data-ticks="200">200 T (10s)</button>
+                            <button class="btn-chip" data-ticks="400">400 T (20s)</button>
+                            <button class="btn-chip active" id="btnAutoTicks">⚡ Otomatik En İyi Tick</button>
+                        </div>
+                    </div>
+
+                    <button id="calculateBtn" class="btn btn-primary btn-large">
+                        <span>⚡ Gerekli BB Sayılarını ve Vektörleri Hesapla</span>
+                    </button>
+                </div>
+
+                <!-- TAB 2: Forward Simulator Input -->
+                <div class="tab-content" id="contentForward">
+                    <h3 data-i18n="manualBbTitle">🎛️ Manuel Breeze Ball Patlama Şiddetleri</h3>
+                    <p class="sub-desc">Her köşedeki patlama şiddetini (BB adedini) manuel ayarlayarak yörüngeyi gözlemleyin.</p>
+                    
+                    <div class="bb-sliders-grid">
+                        <div class="slider-field">
+                            <div class="s-label"><span>BB Kuzey-Batı (NW)</span><b id="valNW">0</b></div>
+                            <input type="range" id="sliderNW" min="0" max="500" value="28" step="1">
+                        </div>
+                        <div class="slider-field">
+                            <div class="s-label"><span>BB Kuzey-Doğu (NE)</span><b id="valNE">0</b></div>
+                            <input type="range" id="sliderNE" min="0" max="500" value="0" step="1">
+                        </div>
+                        <div class="slider-field">
+                            <div class="s-label"><span>BB Güney-Batı (SW)</span><b id="valSW">0</b></div>
+                            <input type="range" id="sliderSW" min="0" max="500" value="43" step="1">
+                        </div>
+                        <div class="slider-field">
+                            <div class="s-label"><span>BB Güney-Doğu (SE)</span><b id="valSE">0</b></div>
+                            <input type="range" id="sliderSE" min="0" max="500" value="15" step="1">
+                        </div>
+                    </div>
+
+                    <div class="inputs-row mt-15">
+                        <div class="field">
+                            <label for="fwdTicks">Uçuş Simülasyon Süresi (Tick)</label>
+                            <input type="number" id="fwdTicks" value="100" min="1" max="1000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Output Card -->
+                <div class="results-card" id="resultsCard">
+                    <div class="res-header">
+                        <h3>📊 Hesaplanan Patlayıcı Düzeneği & Vektörler</h3>
+                        <button class="btn btn-sm btn-secondary" id="copyResultsBtn">📋 Sonuçları Kopyala</button>
+                    </div>
+
+                    <div class="bb-output-grid">
+                        <div class="bb-res-box nw">
+                            <span class="res-title">Kuzey-Batı (NW)</span>
+                            <span class="res-val" id="resNW">0</span>
+                            <span class="res-unit">BB / Patlayıcı</span>
+                        </div>
+                        <div class="bb-res-box ne">
+                            <span class="res-title">Kuzey-Doğu (NE)</span>
+                            <span class="res-val" id="resNE">0</span>
+                            <span class="res-unit">BB / Patlayıcı</span>
+                        </div>
+                        <div class="bb-res-box sw">
+                            <span class="res-title">Güney-Batı (SW)</span>
+                            <span class="res-val" id="resSW">0</span>
+                            <span class="res-unit">BB / Patlayıcı</span>
+                        </div>
+                        <div class="bb-res-box se">
+                            <span class="res-title">Güney-Doğu (SE)</span>
+                            <span class="res-val" id="resSE">0</span>
+                            <span class="res-unit">BB / Patlayıcı</span>
+                        </div>
+                    </div>
+
+                    <!-- Velocity Specs -->
+                    <div class="metrics-row">
+                        <div class="metric-item">
+                            <span class="m-label">Başlangıç V_x</span>
+                            <span class="m-val" id="resVx">0.0000</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="m-label">Başlangıç V_y</span>
+                            <span class="m-val" id="resVy">0.0000</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="m-label">Başlangıç V_z</span>
+                            <span class="m-val" id="resVz">0.0000</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="m-label">Maksimum Y Yüksekliği</span>
+                            <span class="m-val highlight" id="resMaxY">0.0m</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="m-label">Toplam Mesafe</span>
+                            <span class="m-val" id="resDistance">0.0m</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Lower Section: Visual Trajectory Graphs & Tick Inspection Table -->
+        <section class="bottom-section">
+            <div class="graph-tabs">
+                <button class="g-tab active" data-gtab="radar">🧭 Üstten Görünüm (X-Z Radar)</button>
+                <button class="g-tab" data-gtab="profile">📈 Yan Yükseklik Profili (Y vs Mesafe)</button>
+                <button class="g-tab" data-gtab="table">📋 Tick-by-Tick Veri Tablosu</button>
+            </div>
+
+            <!-- Graph 1: X-Z Radar Canvas -->
+            <div class="g-content active" id="gContentRadar">
+                <div class="canvas-wrapper">
+                    <canvas id="radarCanvas" width="1100" height="380"></canvas>
+                </div>
+            </div>
+
+            <!-- Graph 2: Y Profile Canvas -->
+            <div class="g-content" id="gContentProfile">
+                <div class="canvas-wrapper">
+                    <canvas id="profileCanvas" width="1100" height="380"></canvas>
+                </div>
+            </div>
+
+            <!-- Graph 3: Tick Inspection Table -->
+            <div class="g-content" id="gContentTable">
+                <div class="table-controls">
+                    <input type="text" id="tableSearchInput" placeholder="Tick ara (örn: 25)..." class="table-search">
+                    <button class="btn btn-sm btn-secondary" id="exportCsvBtn">📥 CSV İndir</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="tickTable">
+                        <thead>
+                            <tr>
+                                <th>Tick #</th>
+                                <th>Zaman (s)</th>
+                                <th>X Konumu</th>
+                                <th>Y Yüksekliği</th>
+                                <th>Z Konumu</th>
+                                <th>Vx</th>
+                                <th>Vy</th>
+                                <th>Vz</th>
+                                <th>Anlık Hız (m/s)</th>
+                                <th>Chunk Durumu</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tickTableBody">
+                            <!-- Populated dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Breeze Ball Pearl Cannon Calculator • Built for Technical Minecraft & Redstone Engineers • Drag: 0.99 | Gravity: 0.03</p>
+        </footer>
+    </div>
+
+    <!-- Modal: Settings & Custom Physics -->
+    <div class="modal-backdrop" id="settingsModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>⚙️ Özelleştirilmiş Fizik ve Düzenek Ayarları</h3>
+                <button class="close-btn" id="closeSettingsBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="field-group">
+                    <label for="cfgDrag">Hava Direnci Katsayısı (Drag):</label>
+                    <input type="number" id="cfgDrag" value="0.99" step="0.001" min="0.5" max="1.0">
+                    <small>Varsayılan Ender Pearl drag katsayısı: 0.99</small>
+                </div>
+                
+                <div class="field-group">
+                    <label for="cfgGravity">Yerçekimi (Gravity):</label>
+                    <input type="number" id="cfgGravity" value="0.03" step="0.005" min="0.0">
+                    <small>Ender Pearl her tick yerçekimi ivmesi: 0.03</small>
+                </div>
+
+                <div class="field-group">
+                    <label for="cfgForceMult">BB İtme Kuvvet Çarpanı (k_force):</label>
+                    <input type="number" id="cfgForceMult" value="0.40" step="0.01" min="0.01">
+                    <small>1 adet Breeze Ball patlamasının Ender Pearl'e kazandırdığı hız birimi</small>
+                </div>
+
+                <div class="field-group">
+                    <label for="cfgGroundLevel">Zemin Yüksekliği (Y Collide):</label>
+                    <input type="number" id="cfgGroundLevel" value="64" step="1">
+                    <small>Pearl bu Y seviyesine düştüğünde yere çarpmış sayılır</small>
+                </div>
+
+                <div class="field-group checkbox-field">
+                    <label>
+                        <input type="checkbox" id="cfgStopAtGround" checked>
+                        Zemine çarptığında simülasyonu durdur
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="resetPhysicsBtn">Varsayılana Dön</button>
+                <button class="btn btn-primary" id="savePhysicsBtn">Kaydet ve Uygula</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
