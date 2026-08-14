@@ -2,8 +2,9 @@ const DRAG = 0.99;
 const GRAVITY = 0.03;
 const K_FORCE = 0.40;
 
+// Chamber offsets relative to Pearl (dy = 0.0 for pure horizontal 0 Y-motion)
 const chamberDx = 1.0;
-const chamberDy = 0.5;
+const chamberDy = 0.0; 
 const chamberDz = 1.0;
 
 let activeTab = 'target';
@@ -144,7 +145,6 @@ function solveInitialVelocities(dx, dy, dz, ticks) {
 function solveChargeDistribution(vx0, vy0, vz0) {
     const norm = Math.sqrt(chamberDx**2 + chamberDy**2 + chamberDz**2);
     const ux = chamberDx / norm;
-    const uy = chamberDy / norm;
     const uz = chamberDz / norm;
 
     const Fx = ux !== 0 ? vx0 / (K_FORCE * ux) : 0;
@@ -215,11 +215,11 @@ function calculate() {
         pSE = parseInt(simSE.value) || 0;
 
         const norm = Math.sqrt(chamberDx**2 + chamberDy**2 + chamberDz**2);
-        const ux = chamberDx / norm, uy = chamberDy / norm, uz = chamberDz / norm;
+        const ux = chamberDx / norm, uz = chamberDz / norm;
 
         vx0 = K_FORCE * ux * ((pNW + pSW) - (pNE + pSE));
         vz0 = K_FORCE * uz * ((pNW + pNE) - (pSW + pSE));
-        vy0 = K_FORCE * uy * (pNW + pNE + pSW + pSE);
+        vy0 = 0.0; // Pure horizontal 0 Y-motion
         ticks = 100;
     }
 
