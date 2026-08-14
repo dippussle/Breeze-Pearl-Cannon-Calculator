@@ -23,10 +23,6 @@ const targetXInput = document.getElementById('target-x');
 const targetYInput = document.getElementById('target-y');
 const targetZInput = document.getElementById('target-z');
 
-const ticksInput = document.getElementById('input-ticks');
-const ticksVal = document.getElementById('ticks-val');
-const secVal = document.getElementById('sec-val');
-
 const upInput = document.getElementById('input-up');
 const btnCalc = document.getElementById('btn-calc');
 
@@ -53,7 +49,8 @@ const lblSE = document.getElementById('lbl-se');
 const resVx = document.getElementById('res-vx');
 const resVy = document.getElementById('res-vy');
 const resVz = document.getElementById('res-vz');
-const resMaxY = document.getElementById('res-maxy');
+const resTicks = document.getElementById('res-ticks');
+const resSec = document.getElementById('res-sec');
 const resDist = document.getElementById('res-dist');
 
 const radarCanvas = document.getElementById('radar-canvas');
@@ -75,13 +72,6 @@ tabSim.addEventListener('click', () => {
     tabTarget.classList.remove('active');
     viewSim.classList.add('active');
     viewTarget.classList.remove('active');
-    calculate();
-});
-
-ticksInput.addEventListener('input', () => {
-    const t = parseInt(ticksInput.value);
-    ticksVal.textContent = t;
-    secVal.textContent = (t * 0.05).toFixed(2);
     calculate();
 });
 
@@ -154,7 +144,6 @@ function solveInitialVelocities(dx, dy, dz, ticks) {
     return { vx0, vy0, vz0 };
 }
 
-// Zero-cancellation optimal solver: guarantees no opposing corner pairs fire simultaneously
 function solveChargeDistribution(vx0, vy0, vz0) {
     const norm = Math.sqrt(chamberDx**2 + chamberDy**2 + chamberDz**2);
     const ux = chamberDx / norm;
@@ -178,6 +167,25 @@ function solveChargeDistribution(vx0, vy0, vz0) {
     return { pNW, pNE, pSW, pSE, pUp };
 }
 
+// Automatically calculate optimal flight ticks based on target distance
+function findOptimalTicks(dx, dy, dz) {
+    let bestTicks = 100;
+    let minCharges = Infinity;
+
+    for (let t = 15; t <= 350; t++) {
+        const vel = solveInitialVelocities(dx, dy, dz, t);
+        const dist = solveChargeDistribution(vel.vx0, vel.vy0, vel.vz0);
+        const total = dist.pNW + dist.pNE + dist.pSW + dist.pSE + dist.pUp;
+
+        if (total < minCharges && vel.vy0 > -1.0) {
+            minCharges = total;
+            bestTicks = t;
+        }
+    }
+
+    return bestTicks;
+}
+
 function calculate() {
     const x0 = parseFloat(startXInput.value) || 0;
     const y0 = parseFloat(startYInput.value) || 64;
@@ -185,7 +193,7 @@ function calculate() {
 
     let pNW = 0, pNE = 0, pSW = 0, pSE = 0, pUp = 0;
     let vx0 = 0, vy0 = 0, vz0 = 0;
-    let ticks = parseInt(ticksInput.value) || 100;
+    let ticks = 100;
 
     if (activeTab === 'target') {
         const tx = parseFloat(targetXInput.value) || 0;
@@ -195,6 +203,8 @@ function calculate() {
         const dx = tx - x0;
         const dy = ty - y0;
         const dz = tz - z0;
+
+        ticks = findOptimalTicks(dx, dy, dz);
 
         const vel = solveInitialVelocities(dx, dy, dz, ticks);
         vx0 = vel.vx0; vy0 = vel.vy0; vz0 = vel.vz0;
@@ -220,6 +230,7 @@ function calculate() {
         vx0 = K_FORCE * ux * ((pNW + pSW) - (pNE + pSE));
         vz0 = K_FORCE * uz * ((pNW + pNE) - (pSW + pSE));
         vy0 = K_FORCE * uy * (pNW + pNE + pSW + pSE) + (pUp * K_FORCE);
+        ticks = 100;
     }
 
     const sim = simulateTrajectory(x0, y0, z0, vx0, vy0, vz0, ticks);
@@ -240,7 +251,8 @@ function calculate() {
     resVy.textContent = vy0.toFixed(4);
     resVz.textContent = vz0.toFixed(4);
 
-    resMaxY.textContent = sim.maxY.toFixed(1) + 'm';
+    resTicks.textContent = ticks;
+    resSec.textContent = (ticks * 0.05).toFixed(2);
     const netDist = Math.sqrt((sim.finalX - x0)**2 + (sim.finalZ - z0)**2);
     resDist.textContent = netDist.toFixed(1) + 'm';
 
